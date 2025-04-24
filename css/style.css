@@ -44,3 +44,11 @@ p {
 .icon-personalizado {
   color: #880016;
 }
+
+.sidenav li img {
+  max-width: 120px;
+  width: 100%;
+  height: 100px;
+  display: block;
+  margin: 0 auto;
+}
