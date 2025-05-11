@@ -1,5 +1,5 @@
-// Fecha y hora fija: 11 mayo 2025, 6:00 AM en CDMX (CST)
-const fechaCDMX = moment.tz("2025-05-11 06:00", "America/Mexico_City");
+// Fecha y hora fija: 18 mayo 2025, 6:00 AM en CDMX (CST)
+const fechaCDMX = moment.tz("2025-05-18 06:00", "America/Mexico_City");
 // Constante con el enlace
 const enlaceWhatsApp = "https://chat.whatsapp.com/I2V6saqg4BeFeYzDklQ7F7";
 // Asignar al href dinámicamente
