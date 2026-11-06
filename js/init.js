@@ -1,22 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-    // floating
-    var elems = document.querySelectorAll('.fixed-action-btn');
-    var instances = M.FloatingActionButton.init(elems, {
-      direction: 'top',
-      hoverEnabled: false,
+  const trigger = document.querySelector('.sidenav-trigger');
+  if (typeof M === 'undefined') return;
+  trigger?.addEventListener('keydown', event => {
+    if (event.key === ' ') { event.preventDefault(); trigger.click(); }
+  });
+  const menus = document.querySelectorAll('.sidenav');
+  M.Sidenav.init(menus, {
+    onOpenStart: () => trigger?.setAttribute('aria-expanded', 'true'),
+    onCloseEnd: () => trigger?.setAttribute('aria-expanded', 'false')
+  });
+  document.querySelectorAll('.sidenav a[href^="#"]').forEach(link => {
+    link.addEventListener('click', () => {
+      const menu = document.getElementById('mobile-demo');
+      M.Sidenav.getInstance(menu)?.close();
     });
-    // Navegation Menu
-    var elems = document.querySelectorAll('.sidenav');
-    var instances = M.Sidenav.init(elems);
-    
-    // Slider
-    var elems = document.querySelectorAll('.slider');
-     var instances = M.Slider.init(elems, {
-        indicators: true,
-        height: 500,
-        duration: 800,
-        interval:3000
-     });
- 
- });
+  });
+});
