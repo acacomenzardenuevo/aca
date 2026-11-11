@@ -122,6 +122,11 @@ nav .sidenav-trigger { flex-shrink: 0; margin: 0; }
 .resource-link { display: flex; align-items: center; padding: 24px; background: white; border: 1px solid #e7dfe0; border-radius: 10px; color: var(--aca); text-decoration: underline; }
 .card .card-content p + p { margin-top: 16px; }
 .collection .collection-item.avatar p { margin-top: 12px; }
+.recovery-overview h4 { font-size: 1.2rem; margin: 1.25rem 0 .5rem; }
+.recovery-overview ul,
+.recovery-overview ol { padding-inline-start: 1.5rem; }
+.recovery-overview ul > li { list-style-type: disc; }
+.recovery-overview li + li { margin-top: .35rem; }
 #septima { max-width: 1000px; margin-left: auto; margin-right: auto; padding: 0 20px; }
 #daily-reflections .card-image { padding: 24px 12px 60px; }
 #daily-reflections .card-title { color: var(--aca); width: 100%; text-align: center; font-size: 1.4rem; }

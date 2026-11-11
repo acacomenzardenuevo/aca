@@ -18,7 +18,6 @@
     calendar.download = 'reunion-aca.ics';
     card.append(calendar);
     const topic = card.querySelector('p:not(.meeting-time)').textContent;
-    calendar.setAttribute('aria-label', 'Agregar al calendario: ' + label + ', ' + time + ', ' + topic);
     return { card, badge, calendar, topic, day: days.indexOf(label), label, time, minutes: (Number(hour) % 12 + (period === 'p' ? 12 : 0)) * 60 + Number(minute), monthlyWeek: Number(card.dataset.monthlyWeek) };
   });
   // Convert Mexico City wall time with Intl, independent of the visitor's zone.
@@ -38,11 +37,12 @@
   function updateCalendar(meeting, occurrence) {
     const start = calendarTime(occurrence.date, meeting.minutes);
     if (meeting.calendar.dataset.start === String(start)) return;
+    meeting.calendar.setAttribute('aria-label', 'Agregar al calendario: ' + meeting.label + ', ' + meeting.time + ', ' + occurrence.topic);
     if (meeting.calendar.href.startsWith('blob:')) URL.revokeObjectURL(meeting.calendar.href);
-    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ACA Comenzar de nuevo//Reuniones//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ACAD Comenzar de nuevo//Reuniones//ES', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
       'UID:' + start + '-' + meeting.minutes + '@acacomenzardenuevo.org', 'DTSTAMP:' + stamp(Date.now()),
       'DTSTART:' + stamp(start), 'DTEND:' + stamp(start + duration * 60000),
-      'SUMMARY:' + escapeCalendar('ACA · ' + meeting.topic),
+      'SUMMARY:' + escapeCalendar('ACA · ' + occurrence.topic),
       'DESCRIPTION:' + escapeCalendar('Reunión en línea. Horario de Ciudad de México. ID: ' + document.getElementById('zoom-id').textContent + '. Contraseña: ' + document.getElementById('zoom-password').textContent),
       'LOCATION:https://zoom.us/j/3696161442', 'URL:https://acacomenzardenuevo.org/#reuniones', 'END:VEVENT', 'END:VCALENDAR'];
     // Fold by UTF-8 byte length for calendar applications that enforce RFC limits.
@@ -73,7 +73,8 @@
       schedule.forEach(meeting => {
         if (date.getUTCDay() !== meeting.day) return;
         if (meeting.monthlyWeek && Math.ceil(date.getUTCDate() / 7) !== meeting.monthlyWeek) return;
-        occurrences.push({ ...meeting, date, offset, wait: offset * 1440 + meeting.minutes - now });
+        const topic = date.getUTCDate() <= 7 ? meeting.card.dataset.firstSundayTopic || meeting.topic : meeting.topic;
+        occurrences.push({ ...meeting, topic, date, offset, wait: offset * 1440 + meeting.minutes - now });
       });
     }
     const current = occurrences.find(meeting => meeting.wait <= 0 && meeting.wait > -duration);
