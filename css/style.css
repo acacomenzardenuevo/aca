@@ -72,6 +72,7 @@
 
   .aca-img {
     flex: 1;
+    order: -1;
   }
 
   .aca-content {
@@ -112,7 +113,35 @@ nav > .nav-wrapper { width: 100%; }
 nav img { width: 44px; height: 44px; object-fit: contain; border-radius: 4px; }
 
 nav ul a { padding: 0 10px; }
-nav .sidenav-trigger { flex-shrink: 0; margin: 0; }
+nav .sidenav-trigger {
+  flex-shrink: 0;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid #ffffff80;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+@media (min-width: 993px) {
+  nav .sidenav-trigger { display: none; }
+}
+#mobile-demo { width: min(300px, calc(100% - 24px)); }
+.mobile-menu-header { padding: 8px 16px; text-align: right; }
+.mobile-menu-header button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dfc9cd;
+  border-radius: 6px;
+  background: #f6edef;
+  color: var(--aca);
+  font: inherit;
+  cursor: pointer;
+}
 .meeting-section { background: white; padding: 24px; border-radius: 14px; border: 1px solid #eadcde; }
 .meeting-section h2 { margin-top: 0; }
 .anniversary-section { display: grid; gap: 24px; align-items: center; }
@@ -149,7 +178,7 @@ nav .sidenav-trigger { flex-shrink: 0; margin: 0; }
   nav img { width: 36px; height: 36px; }
   .meeting-section { padding: 20px 16px; }
   .card .card-content { padding: 20px; }
-  .btn { max-width: 100%; height: auto; min-height: 40px; white-space: normal; }
+  .btn { max-width: 100%; height: auto; min-height: 44px; white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
@@ -239,7 +268,7 @@ nav.pair-navigation { display:flex; flex-wrap:wrap; gap:12px; height:auto; line-
 .copyable-detail { user-select:all; }
 .contribution-option .contribution-steps { padding-left:22px; line-height:1.7; list-style:decimal; }
 .contribution-steps li + li { margin-top:8px; }
-.contribution-option .btn { margin-top:16px; height:auto; min-height:40px; white-space:normal; }
+.contribution-option .btn { margin-top:16px; height:auto; min-height:44px; white-space:normal; }
 .contribution-option address { font-style:normal; line-height:1.7; margin-top:8px; }
 .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 #septima > .row > .col { width:100%; }
@@ -278,10 +307,19 @@ nav.pair-navigation { display:flex; flex-wrap:wrap; gap:12px; height:auto; line-
 .meeting-card.is-current { border:2px solid var(--aca); background:#f6edef; }
 .copy-status:not(:empty) { position:fixed; bottom:16px; left:5%; width:90%; max-width:none; margin:0; padding:16px; z-index:1000; background:#302b2b; color:white; border-radius:8px; box-shadow:0 4px 20px #0003; }
 @media (max-width:600px) {
-  .meeting-access { padding:16px; }
+  html { scroll-padding-top: 68px; }
+  main { padding-top: 12px; }
+  section { margin-bottom: 28px; scroll-margin-top: 0; }
+  .aca-card .aca-content { display: flex; flex-direction: column; padding: 16px; }
+  .aca-content h1 { margin-bottom: 12px; }
+  .aca-card .aca-content .justificado { order: 1; margin-top: 16px; }
+  .meeting-access { margin-top: 0; padding: 12px; }
   .quick-actions { gap:10px; }
   .quick-actions .btn, .quick-actions .btn-outline { width:100%; text-align:center; }
-  .quick-actions > a:last-child { width:100%; text-align:center; }
+  .quick-actions > a:last-child { width:100%; min-height:44px; text-align:center; }
+  .connection-details > div { flex-wrap: wrap; }
+  .connection-details .copy-button { margin-left: auto; }
+  .copy-status:not(:empty) { bottom: max(16px, env(safe-area-inset-bottom)); }
   .aca-img { max-height:190px; overflow:hidden; }
   .aca-img img { height:190px; }
 }

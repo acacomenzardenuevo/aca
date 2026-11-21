@@ -24,34 +24,11 @@ body{
   text-align:center;
 }
 
-.container{max-width:420px;margin:auto;padding:0 12px 24px;}
-
-.canvas-wrap{
-  position:relative;
-  background:var(--card);
-  border-radius:24px;
-  padding:16px;
-}
-
-canvas{width:100%;max-width:340px;aspect-ratio:1/1;cursor:pointer;}
-
-.center-label{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  pointer-events:none;
-}
-
-.center-chip{
-  background:rgba(0,0,0,.6);
-  padding:10px 16px;
-  border-radius:999px;
-  font-weight:700;
-  font-size:14px;
-}
-
-#info{margin-top:16px;padding:14px;border-radius:16px;background:var(--card);}
+.container{max-width:864px;margin:auto;padding:0 12px 24px;}
+.canvas-wrap{background:var(--card);border-radius:24px;padding:8px;}
+canvas{display:block;width:100%;height:auto;cursor:grab;touch-action:none;}
+canvas.is-rotating{cursor:grabbing;}
+#info{margin-top:16px;padding:14px;border-radius:16px;background:var(--card);font-size:clamp(1.2rem,4.5vw,1.5rem);font-weight:700;line-height:1.4;overflow-wrap:anywhere;}
 
 .barra{
   position:sticky;
@@ -100,16 +77,21 @@ canvas{width:100%;max-width:340px;aspect-ratio:1/1;cursor:pointer;}
 
 .site-link:hover{background:#e1e8f5;}
 .site-link:focus-visible{outline:3px solid #f1c40f;outline-offset:4px;}
+.busqueda{display:grid;gap:8px;max-width:480px;margin:16px auto;}
+.busqueda input{width:100%;min-height:44px;padding:10px;color:var(--text);background:var(--card);border:1px solid #8792a7;border-radius:8px;font:inherit;}
 .opciones{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0;}
-.opciones button{padding:8px 12px;background:#2a3140;color:#fff;border:1px solid #626c80;border-radius:8px;cursor:pointer;}
+.opciones button{min-height:44px;padding:8px 12px;background:#2a3140;color:#fff;border:1px solid #8792a7;border-radius:8px;cursor:pointer;}
+.opciones button:focus-visible,.busqueda input:focus-visible,.barra button:focus-visible{outline:3px solid #f1c40f;outline-offset:3px;}
+.barra button{min-height:44px;}
 .barra button:disabled{opacity:.65;}
 
-@keyframes popIn{
-  0%{transform:scale(.7);opacity:0}
-  100%{transform:scale(1);opacity:1}
+@media (max-width:600px){
+  h1{margin:16px 12px 8px;font-size:clamp(1.5rem,6vw,2rem);}
+  body > p{margin:0 12px 16px;}
+  .barra{padding-bottom:max(10px,env(safe-area-inset-bottom));}
+  .barra button{min-width:0;font-size:.75rem;line-height:1.25;}
+  .opciones button{flex:1 1 130px;overflow-wrap:anywhere;}
 }
-
-.etiqueta{animation:popIn .3s ease;}
 </style>
 </head>
 
@@ -117,20 +99,19 @@ canvas{width:100%;max-width:340px;aspect-ratio:1/1;cursor:pointer;}
 
 <a class="site-link" href="index.html"><span aria-hidden="true">←</span> Volver al sitio de ACAD</a>
 <h1>Ruleta de las emociones</h1>
-<p>¿Qué estás sintiendo? Elige una emoción en la ruleta o en los botones.</p>
+<p>Arrastra la ruleta para girarla. Toca una emoción o búscala por nombre.</p>
 
-<div class="container">
-  <div class="canvas-wrap">
-    <canvas aria-hidden="true" id="ruleta" width="360" height="360"></canvas>
-    <div class="center-label">
-      <span id="centerText" class="center-chip">Inicio</span>
-    </div>
+<main class="container">
+  <div class="busqueda">
+    <label for="buscar">Buscar una emoción</label>
+    <input id="buscar" type="search" autocomplete="off" aria-controls="opciones">
   </div>
-
-  <div id="opciones" class="opciones" role="group" aria-label="Emociones"></div>
-  <div id="info" role="status" hidden></div>
-</div>
-
+  <div id="info" role="status"></div>
+  <div id="opciones" class="opciones" role="group" aria-label="Emociones disponibles"></div>
+  <div class="canvas-wrap">
+    <canvas aria-hidden="true" id="ruleta" width="840" height="840"></canvas>
+  </div>
+</main>
 <div class="barra">
 
   <button onclick="home()">
@@ -158,14 +139,11 @@ canvas{width:100%;max-width:340px;aspect-ratio:1/1;cursor:pointer;}
 <script>
 const canvas = document.getElementById("ruleta");
 const ctx = canvas.getContext("2d");
-const centerText = document.getElementById("centerText");
+const buscar = document.getElementById("buscar");
 const opciones = document.getElementById("opciones");
 const info = document.getElementById("info");
 const atras = document.getElementById("atras");
 const copiar = document.getElementById("copiar");
-
-let nivel = 1;
-let seleccion = {};
 
 const data = {
   ira:{ color:"#e74c3c", nivel2:{ Amenazado:["Inseguro","Celoso"], Odioso:["Resentido","Violado"], Desquiciado:["Rabioso","Enfurecido"], Agresivo:["Provocado","Hostil"], Frustrado:["Enfadado","Irritado"], Distante:["Retraído","Sospechoso"]}},
@@ -176,113 +154,206 @@ const data = {
   miedo:{ color:"#912481", nivel2:{ Asustado:["Espantado","Aterrado"], Inseguro:["Inferior","Pobre"], Sumiso:["Indignado","Insignificante"], Rechazado:["Perturbado","Inadecuado"], Humillado:["Ridiculizado","Irrespetado"], Herido:["Devastado","Apenado"]}}
 };
 
-function getItems(){
-  if(nivel===1) return Object.keys(data);
-  if(nivel===2) return Object.keys(data[seleccion.basica].nivel2);
-  return data[seleccion.basica].nivel2[seleccion.nivel2];
+const centro = canvas.width / 2;
+const vuelta = 2 * Math.PI;
+const origen = -Math.PI / 2;
+const radios = [0, 126, 260, 408];
+const total = Object.values(data).reduce((suma, grupo) =>
+  suma + Object.values(grupo.nivel2).flat().length, 0);
+const segmentos = [];
+const bases = [];
+let posicion = 0;
+let seleccionado = null;
+let giro = 0;
+let gesto = null;
+
+function crearSegmento(nombre, color, inicio, fin, padre = null){
+  const segmento = { nombre, color, inicio, fin, padre, hijos: [], nivel: padre ? padre.nivel + 1 : 0 };
+  segmentos.push(segmento);
+  if(padre) padre.hijos.push(segmento);
+  return segmento;
 }
 
-function actualizarEtiqueta(){
-  let texto = "";
-  if(seleccion.basica) texto += seleccion.basica;
-  if(seleccion.nivel2) texto += " • " + seleccion.nivel2;
-  if(seleccion.nivel3) texto += " • " + seleccion.nivel3;
-
-  centerText.textContent = texto || "Inicio";
-}
-
-function draw(){
-  const items = getItems();
-  if(!items.length) return;
-
-  const cx = 180, cy = 180;
-  const step = (2*Math.PI)/items.length;
-
-  ctx.clearRect(0,0,360,360);
-
-  let start = 0;
-
-  items.forEach((txt)=>{
-    const end = start + step;
-
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,160,start,end);
-    ctx.fillStyle = (nivel===1?data[txt].color:data[seleccion.basica].color);
-    ctx.fill();
-
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.rotate((start+end)/2);
-    ctx.fillStyle = ["tristeza", "miedo"].includes(nivel === 1 ? txt : seleccion.basica) ? "#fff" : "#151922";
-    ctx.font="bold 16px Arial";
-    ctx.textAlign="right";
-    ctx.fillText(txt,140,5);
-    ctx.restore();
-
-    start=end;
+Object.entries(data).forEach(([nombre, { color, nivel2 }]) => {
+  const ramas = Object.entries(nivel2);
+  const cantidad = ramas.reduce((suma, [, emociones]) => suma + emociones.length, 0);
+  const base = crearSegmento(nombre[0].toUpperCase() + nombre.slice(1), color, posicion, posicion + cantidad);
+  bases.push(base);
+  ramas.forEach(([nombreRama, emociones]) => {
+    const rama = crearSegmento(nombreRama, color, posicion, posicion + emociones.length, base);
+    emociones.forEach(emocion => {
+      crearSegmento(emocion, color, posicion, posicion + 1, rama);
+      posicion++;
+    });
   });
+});
+
+function ruta(segmento){
+  const pasos = [];
+  for(let paso = segmento; paso; paso = paso.padre) pasos.push(paso);
+  return pasos;
 }
 
-function render(focusOption = false){
-  actualizarEtiqueta();
-  draw();
-  const botones = getItems().map(emocion => {
+function colorTexto(color){
+  return [data.tristeza.color, data.miedo.color].includes(color) ? "#fff" : "#151922";
+}
+
+function dibujar(){
+  if(!ctx) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const activos = new Set(ruta(seleccionado));
+
+  segmentos.forEach(segmento => {
+    const { color, inicio, fin, nivel, nombre } = segmento;
+    const anguloInicial = origen + giro + inicio / total * vuelta;
+    const anguloFinal = origen + giro + fin / total * vuelta;
+    const interno = radios[nivel];
+    const externo = radios[nivel + 1];
+    ctx.globalAlpha = !seleccionado || activos.has(segmento) ? 1 : .35;
+    ctx.beginPath();
+    ctx.arc(centro, centro, externo, anguloInicial, anguloFinal);
+    if(interno){
+      ctx.arc(centro, centro, interno, anguloFinal, anguloInicial, true);
+    } else {
+      ctx.lineTo(centro, centro);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = "#151922";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const medio = (anguloInicial + anguloFinal) / 2;
+    const radio = nivel ? (interno + externo) / 2 : 78;
+    ctx.save();
+    ctx.translate(centro + Math.cos(medio) * radio, centro + Math.sin(medio) * radio);
+    if(nivel) ctx.rotate(Math.cos(medio) < 0 ? medio + Math.PI : medio);
+    ctx.fillStyle = colorTexto(color);
+    ctx.font = nivel ? "bold 17px system-ui" : "bold 19px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(nombre, 0, 0, nivel ? externo - interno - 14 : 82);
+    ctx.restore();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function normalizar(texto){
+  return texto.toLocaleLowerCase("es").normalize("NFD").replace(/\p{M}/gu, "");
+}
+
+function mostrarOpciones(){
+  const filtro = normalizar(buscar.value.trim());
+  const coincidencias = filtro
+    ? segmentos.filter(segmento => normalizar(segmento.nombre).includes(filtro))
+    : seleccionado?.hijos ?? bases;
+
+  const botones = coincidencias.map(segmento => {
     const boton = document.createElement("button");
     boton.type = "button";
-    boton.textContent = emocion;
-    boton.addEventListener("click", () => elegir(emocion, true));
+    boton.style.backgroundColor = segmento.color;
+    boton.style.color = colorTexto(segmento.color);
+    boton.textContent = filtro ? ruta(segmento).map(paso => paso.nombre).join(" → ") : segmento.nombre;
+    boton.addEventListener("click", () => {
+      seleccionar(segmento);
+      (opciones.querySelector("button") ?? buscar).focus();
+    });
     return boton;
   });
   opciones.replaceChildren(...botones);
-  atras.disabled = nivel === 1;
-  copiar.disabled = !seleccion.nivel3;
-  info.hidden = !seleccion.nivel3;
-  info.textContent = seleccion.nivel3 ? centerText.textContent : "";
-  if(focusOption) botones[0].focus();
+  if(filtro && !botones.length) opciones.textContent = "No se encontraron emociones.";
 }
 
-function elegir(emocion, focusOption){
-  if(nivel === 1){
-    seleccion.basica = emocion;
-    nivel = 2;
-  } else if(nivel === 2){
-    seleccion.nivel2 = emocion;
-    nivel = 3;
-  } else {
-    seleccion.nivel3 = emocion;
-  }
-  render(focusOption);
+function textoRuta(){
+  return ruta(seleccionado).map(paso => paso.nombre).join(" → ");
 }
 
-canvas.addEventListener("click", event => {
+function seleccionar(segmento){
+  seleccionado = segmento;
+  buscar.value = "";
+  info.textContent = textoRuta();
+  info.style.backgroundColor = segmento?.color ?? "";
+  info.style.color = segmento ? colorTexto(segmento.color) : "";
+  info.hidden = !segmento;
+  atras.disabled = !segmento;
+  copiar.disabled = !segmento;
+  mostrarOpciones();
+  dibujar();
+}
+
+function puntoRuleta(event){
   const rect = canvas.getBoundingClientRect();
-  const x = (event.clientX - rect.left) * canvas.width / rect.width - canvas.width / 2;
-  const y = (event.clientY - rect.top) * canvas.height / rect.height - canvas.height / 2;
-  if(Math.hypot(x, y) > 160) return;
-  const items = getItems();
-  const circle = 2 * Math.PI;
-  const angle = (Math.atan2(y, x) + circle) % circle;
-  elegir(items[Math.floor(angle / circle * items.length)]);
+  const x = (event.clientX - rect.left) * canvas.width / rect.width - centro;
+  const y = (event.clientY - rect.top) * canvas.height / rect.height - centro;
+  return { distancia: Math.hypot(x, y), angulo: Math.atan2(y, x) };
+}
+
+canvas.addEventListener("pointerdown", event => {
+  if(gesto || event.button !== 0) return;
+  const { distancia, angulo } = puntoRuleta(event);
+  if(distancia >= radios.at(-1)) return;
+  gesto = {
+    id: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+    angulo: distancia < 24 ? null : angulo,
+    arrastrando: false
+  };
+  canvas.setPointerCapture(event.pointerId);
 });
 
-function volverNivel(){
-  if(nivel === 3){
-    delete seleccion.nivel3;
-    delete seleccion.nivel2;
-  } else if(nivel === 2){
-    delete seleccion.basica;
+canvas.addEventListener("pointermove", event => {
+  if(gesto?.id !== event.pointerId) return;
+  if(!gesto.arrastrando && Math.hypot(event.clientX - gesto.x, event.clientY - gesto.y) < 8) return;
+  gesto.arrastrando = true;
+  canvas.classList.add("is-rotating");
+  const { distancia, angulo } = puntoRuleta(event);
+  if(distancia < 24){
+    gesto.angulo = null;
+    return;
   }
-  nivel = Math.max(1, nivel - 1);
-  render(true);
+  if(gesto.angulo !== null){
+    giro = (giro + angulo - gesto.angulo) % vuelta;
+    dibujar();
+  }
+  gesto.angulo = angulo;
+});
+
+function terminarGesto(event){
+  if(gesto?.id !== event.pointerId) return;
+  const { x, y, arrastrando } = gesto;
+  gesto = null;
+  canvas.classList.remove("is-rotating");
+  if(event.type !== "pointerup" || arrastrando || Math.hypot(event.clientX - x, event.clientY - y) >= 8) return;
+
+  const { distancia, angulo } = puntoRuleta(event);
+  const nivel = radios.findIndex(radio => distancia < radio) - 1;
+  if(nivel < 0) return;
+  const posicionAngular = ((angulo - origen - giro) % vuelta + vuelta) % vuelta / vuelta * total;
+  const segmento = segmentos.find(paso => paso.nivel === nivel && posicionAngular >= paso.inicio && posicionAngular < paso.fin);
+  if(segmento) seleccionar(segmento);
+}
+
+canvas.addEventListener("pointerup", terminarGesto);
+canvas.addEventListener("pointercancel", terminarGesto);
+canvas.addEventListener("lostpointercapture", terminarGesto);
+
+buscar.addEventListener("input", mostrarOpciones);
+
+function volverNivel(){
+  seleccionar(seleccionado?.padre ?? null);
+  if(atras.disabled) buscar.focus();
 }
 
 async function copiarResultado(){
+  const segmento = seleccionado;
+  const texto = textoRuta();
   try {
-    await navigator.clipboard.writeText("Ruleta de las emociones: " + centerText.textContent + ". ¿Cómo puedo gestionar mis sentimientos?");
-    info.textContent = centerText.textContent + " · Resultado copiado.";
+    await navigator.clipboard.writeText("Ruleta de las emociones: " + texto + ". ¿Cómo puedo gestionar mis sentimientos?");
+    if(seleccionado === segmento) info.textContent = texto + " · Resultado copiado.";
   } catch {
-    info.textContent = centerText.textContent + " · Puedes seleccionar y copiar el resultado.";
+    if(seleccionado === segmento) info.textContent = texto + " · Puedes seleccionar y copiar el resultado.";
   }
 }
 
@@ -291,12 +362,11 @@ function donar(){
 }
 
 function home(){
-  nivel = 1;
-  seleccion = {};
-  render(true);
+  seleccionar(null);
+  buscar.focus();
 }
 
-render();
+seleccionar(null);
 </script>
 
 </body>

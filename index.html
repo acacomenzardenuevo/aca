@@ -33,7 +33,7 @@
         <img src="img/ACA-WSO_logo_w-DF_web.jpg" alt="ACAD" width="48" height="48">
           <span class="site-name">ACAD Comenzar de nuevo</span>
 
-          <a href="#" data-target="mobile-demo" class="sidenav-trigger right" role="button" aria-label="Abrir menú" aria-controls="mobile-demo" aria-expanded="false"><i class="material-icons right">menu</i></a>
+          <button type="button" data-target="mobile-demo" class="sidenav-trigger" aria-controls="mobile-demo" aria-expanded="false">Menú</button>
           <ul class="right hide-on-med-and-down">
             <li><a href="#aniversario">Aniversario</a></li>
             <li><a href="#reuniones">Reuniones en línea</a></li>
@@ -53,7 +53,8 @@
   </nav>
 </div>
 
-<ul class="sidenav" id="mobile-demo">
+<ul class="sidenav" id="mobile-demo" inert>
+  <li class="mobile-menu-header"><button type="button" class="sidenav-close">Cerrar menú</button></li>
   <li class="center-align">
     <img src="img/ACA-WSO_logo_w-DF_web.jpg" alt="Logo" class="responsive-img" style="max-width: 150px; margin: 20px auto;">
   </li>
@@ -78,11 +79,6 @@
     <div class="col s12">
       <div class="card aca-card hoverable">
 
-        <!-- IMAGEN -->
-        <div class="card-image aca-img">
-          <img src="img/portada-web.jpg" alt="ACAD" class="responsive-img">
-        </div>
-
         <!-- CONTENIDO -->
         <div class="card-content aca-content">
           <h1>ACAD Comenzar de nuevo</h1><p class="intro">Un espacio para compartir y recuperarnos juntos.</p>
@@ -98,6 +94,10 @@
             <div class="quick-actions"><a class="btn nav-aca" href="https://zoom.us/j/3696161442" target="_blank" rel="noopener noreferrer">Entrar a Zoom</a><a class="btn-outline" href="#reuniones">Ver horarios</a><a href="#primeros-pasos">Es mi primera vez</a></div>
             <div class="connection-details"><div><span class="connection-value"><span class="connection-label">ID de Zoom</span><strong id="zoom-id">369 616 1442</strong></span><button type="button" class="copy-button" data-copy-target="zoom-id" data-copy-label="ID de Zoom" hidden>Copiar ID</button></div><div><span class="connection-value"><span class="connection-label">Contraseña</span><strong id="zoom-password">2019</strong></span><button type="button" class="copy-button" data-copy-target="zoom-password" data-copy-label="Contraseña" hidden>Copiar contraseña</button></div></div>
           </div>
+        </div>
+
+        <div class="card-image aca-img">
+          <img src="img/portada-web.jpg" alt="ACAD" class="responsive-img">
         </div>
 
       </div>
