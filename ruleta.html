@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruleta de las emociones | ACAD Comenzar de nuevo</title>
+
+<link rel="icon" href="img/favicon.ico">
+
+<style>
+:root{
+  --bg:#0f1115;
+  --card:#151922;
+  --text:#ffffff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:linear-gradient(180deg,#0f1115,#0b0d12);
+  color:var(--text);
+  font-family:system-ui,Arial;
+  text-align:center;
+}
+
+.container{max-width:420px;margin:auto;padding:0 12px 24px;}
+
+.canvas-wrap{
+  position:relative;
+  background:var(--card);
+  border-radius:24px;
+  padding:16px;
+}
+
+canvas{width:100%;max-width:340px;aspect-ratio:1/1;cursor:pointer;}
+
+.center-label{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+
+.center-chip{
+  background:rgba(0,0,0,.6);
+  padding:10px 16px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:14px;
+}
+
+#info{margin-top:16px;padding:14px;border-radius:16px;background:var(--card);}
+
+.barra{
+  position:sticky;
+  bottom:0;
+  width:100%;
+  display:flex;
+  gap:6px;
+  padding:10px;
+  background:#222;
+}
+
+.barra button{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:8px 4px;
+  border:none;
+  border-radius:14px;
+  color:white;
+  background:#2a3140;
+  font-size:11px;
+}
+
+.barra svg{
+  width:20px;
+  height:20px;
+}
+
+.site-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:44px;
+  margin:16px 12px 0;
+  padding:10px 18px;
+  border-radius:10px;
+  background:#fff;
+  color:#151922;
+  font-weight:700;
+  text-decoration:none;
+}
+
+.site-link:hover{background:#e1e8f5;}
+.site-link:focus-visible{outline:3px solid #f1c40f;outline-offset:4px;}
+.opciones{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0;}
+.opciones button{padding:8px 12px;background:#2a3140;color:#fff;border:1px solid #626c80;border-radius:8px;cursor:pointer;}
+.barra button:disabled{opacity:.65;}
+
+@keyframes popIn{
+  0%{transform:scale(.7);opacity:0}
+  100%{transform:scale(1);opacity:1}
+}
+
+.etiqueta{animation:popIn .3s ease;}
+</style>
+</head>
+
+<body>
+
+<a class="site-link" href="index.html"><span aria-hidden="true">←</span> Volver al sitio de ACAD</a>
+<h1>Ruleta de las emociones</h1>
+<p>¿Qué estás sintiendo? Elige una emoción en la ruleta o en los botones.</p>
+
+<div class="container">
+  <div class="canvas-wrap">
+    <canvas aria-hidden="true" id="ruleta" width="360" height="360"></canvas>
+    <div class="center-label">
+      <span id="centerText" class="center-chip">Inicio</span>
+    </div>
+  </div>
+
+  <div id="opciones" class="opciones" role="group" aria-label="Emociones"></div>
+  <div id="info" role="status" hidden></div>
+</div>
+
+<div class="barra">
+
+  <button onclick="home()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>
+    Inicio
+  </button>
+
+  <button id="atras" onclick="volverNivel()" disabled>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 18l-6-6 6-6"/></svg>
+    Atrás
+  </button>
+
+  <button id="copiar" onclick="copiarResultado()" disabled>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4v14h2V3h10V1zm4 4H8v18h12V5z"/></svg>
+    Copiar
+  </button>
+
+  <button onclick="donar()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6-4.35-9-7.5C-1 8 3 3 7.5 6.5 12 3 16.5 6.5 16.5 6.5S20 8 21 13.5C18 16.65 12 21 12 21z"/></svg>
+    Séptima tradición
+  </button>
+
+</div>
+
+<script>
+const canvas = document.getElementById("ruleta");
+const ctx = canvas.getContext("2d");
+const centerText = document.getElementById("centerText");
+const opciones = document.getElementById("opciones");
+const info = document.getElementById("info");
+const atras = document.getElementById("atras");
+const copiar = document.getElementById("copiar");
+
+let nivel = 1;
+let seleccion = {};
+
+const data = {
+  ira:{ color:"#e74c3c", nivel2:{ Amenazado:["Inseguro","Celoso"], Odioso:["Resentido","Violado"], Desquiciado:["Rabioso","Enfurecido"], Agresivo:["Provocado","Hostil"], Frustrado:["Enfadado","Irritado"], Distante:["Retraído","Sospechoso"]}},
+  tristeza:{ color:"#0477ba", nivel2:{ Ansioso:["Anhelante","Abrumado"], Abandonado:["Ignorado","Discriminado"], Desesperado:["Impotente","Vulnerable"], Deprimido:["Inferior","Vacío"], Solitario:["Abandonado","Apartado"], Aburrido:["Apático","Indiferente"]}},
+  disgusto:{ color:"#24a44f", nivel2:{ Critico:["Sarcástico","Escéptico"], Desaprobado:["Sentencioso","Aborrecido"], Decepcionado:["Repugnante","Rebelde"], Terrible:["Repulsivo","Detestable"], Evasivo:["Aversivo","Indeciso"], Culpable:["Atormentado","Avergonzado"]}},
+  sorpresa:{ color:"#CFCF3E", nivel2:{ Jubiloso:["Liberado","Eufórico"], Efusivo:["Inquieto","Energético"], Asombrado:["Atónito","Pasmado"], Confundido:["Desilusionado","Perplejo"], Interesado:["Entretenido","Curioso"]}},
+  felicidad:{ color:"#ef971b", nivel2:{ Optimista:["Inspirado","Receptivo"], Íntimo:["Juguetón","Sensible"], Pacífico:["Esperanzado","Amoroso"], Poderoso:["Provocativo","Valiente"], Aceptado:["Respetado","Realizado"], Orgulloso:["Importante","Confiado"]}},
+  miedo:{ color:"#912481", nivel2:{ Asustado:["Espantado","Aterrado"], Inseguro:["Inferior","Pobre"], Sumiso:["Indignado","Insignificante"], Rechazado:["Perturbado","Inadecuado"], Humillado:["Ridiculizado","Irrespetado"], Herido:["Devastado","Apenado"]}}
+};
+
+function getItems(){
+  if(nivel===1) return Object.keys(data);
+  if(nivel===2) return Object.keys(data[seleccion.basica].nivel2);
+  return data[seleccion.basica].nivel2[seleccion.nivel2];
+}
+
+function actualizarEtiqueta(){
+  let texto = "";
+  if(seleccion.basica) texto += seleccion.basica;
+  if(seleccion.nivel2) texto += " • " + seleccion.nivel2;
+  if(seleccion.nivel3) texto += " • " + seleccion.nivel3;
+
+  centerText.textContent = texto || "Inicio";
+}
+
+function draw(){
+  const items = getItems();
+  if(!items.length) return;
+
+  const cx = 180, cy = 180;
+  const step = (2*Math.PI)/items.length;
+
+  ctx.clearRect(0,0,360,360);
+
+  let start = 0;
+
+  items.forEach((txt)=>{
+    const end = start + step;
+
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,160,start,end);
+    ctx.fillStyle = (nivel===1?data[txt].color:data[seleccion.basica].color);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate((start+end)/2);
+    ctx.fillStyle = ["tristeza", "miedo"].includes(nivel === 1 ? txt : seleccion.basica) ? "#fff" : "#151922";
+    ctx.font="bold 16px Arial";
+    ctx.textAlign="right";
+    ctx.fillText(txt,140,5);
+    ctx.restore();
+
+    start=end;
+  });
+}
+
+function render(focusOption = false){
+  actualizarEtiqueta();
+  draw();
+  const botones = getItems().map(emocion => {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.textContent = emocion;
+    boton.addEventListener("click", () => elegir(emocion, true));
+    return boton;
+  });
+  opciones.replaceChildren(...botones);
+  atras.disabled = nivel === 1;
+  copiar.disabled = !seleccion.nivel3;
+  info.hidden = !seleccion.nivel3;
+  info.textContent = seleccion.nivel3 ? centerText.textContent : "";
+  if(focusOption) botones[0].focus();
+}
+
+function elegir(emocion, focusOption){
+  if(nivel === 1){
+    seleccion.basica = emocion;
+    nivel = 2;
+  } else if(nivel === 2){
+    seleccion.nivel2 = emocion;
+    nivel = 3;
+  } else {
+    seleccion.nivel3 = emocion;
+  }
+  render(focusOption);
+}
+
+canvas.addEventListener("click", event => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (event.clientX - rect.left) * canvas.width / rect.width - canvas.width / 2;
+  const y = (event.clientY - rect.top) * canvas.height / rect.height - canvas.height / 2;
+  if(Math.hypot(x, y) > 160) return;
+  const items = getItems();
+  const circle = 2 * Math.PI;
+  const angle = (Math.atan2(y, x) + circle) % circle;
+  elegir(items[Math.floor(angle / circle * items.length)]);
+});
+
+function volverNivel(){
+  if(nivel === 3){
+    delete seleccion.nivel3;
+    delete seleccion.nivel2;
+  } else if(nivel === 2){
+    delete seleccion.basica;
+  }
+  nivel = Math.max(1, nivel - 1);
+  render(true);
+}
+
+async function copiarResultado(){
+  try {
+    await navigator.clipboard.writeText("Ruleta de las emociones: " + centerText.textContent + ". ¿Cómo puedo gestionar mis sentimientos?");
+    info.textContent = centerText.textContent + " · Resultado copiado.";
+  } catch {
+    info.textContent = centerText.textContent + " · Puedes seleccionar y copiar el resultado.";
+  }
+}
+
+function donar(){
+  window.location.href = "index.html#septima";
+}
+
+function home(){
+  nivel = 1;
+  seleccion = {};
+  render(true);
+}
+
+render();
+</script>
+
+</body>
+</html>

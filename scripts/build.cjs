@@ -4,7 +4,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'dist');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const files = new Set(['index.html', 'CNAME', 'robots.txt', 'sitemap.xml']);
+const files = new Set(['index.html', 'ruleta.html', 'CNAME']);
 for (const match of html.matchAll(/(?:src|href)="((?:css|js|img|documentos)\/[^"?#]+)"/g)) files.add(match[1]);
 for (const file of files) {
   const source = path.resolve(root, file);
